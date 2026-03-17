@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>DLP Bulk Reviewer</title>
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .toolbar {
+            margin-bottom: 10px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 6px;
+            font-size: 13px;
+            width: 160px;
+        }
+
+        button {
+            padding: 8px 14px;
+            margin-right: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        #count {
+            margin-left: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>DLP Bulk Reviewer</h2>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button onclick="bulk('KEEP')">KEEP selected</button>
+        <button onclick="bulk('SUPPRESS')">SUPPRESS selected</button>
+        <span id="count">0 selected</span>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <input id="minEntropy" type="number" step="0.1" placeholder="Entropy ≥">
+        <input id="minLength" type="number" placeholder="Length ≥">
+
+        <select id="mlDecision">
+            <option value="">ML Decision (All)</option>
+            <option value="KEEP">KEEP</option>
+            <option value="SUPPRESS">SUPPRESS</option>
+            <option value="UNCERTAIN">UNCERTAIN</option>
+        </select>
+
+        <input id="minScore" type="number" step="0.01" placeholder="Score ≥">
+        <input id="maxScore" type="number" step="0.01" placeholder="Score ≤">
+    </div>
+
+    <!-- Table -->
+    <table id="dlp" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" id="selectAll">
+                </th>
+                <th>Value</th>
+                <th>Context (Snippet)</th>
+                <th>Entropy</th>
+                <th>Length</th>
+                <th>Category</th>
+                <th>ML Score</th>
+                <th>ML Decision</th>
+            </tr>
+        </thead>
+    </table>
+
+    <script>
+        let table;
+
+        $(document).ready(function () {
+
+            // ----------------------------------------------------
+            // Custom filters (Entropy, Length, ML Score, ML Decision)
+            // ----------------------------------------------------
+            $.fn.dataTable.ext.search.push(function (settings, data) {
+
+                const entropy = parseFloat(data[2]) || 0;
+                const length = parseInt(data[3]) || 0;
+
+                const score = parseFloat(data[5]);
+                const decision = data[6];
+
+                const minEntropy = parseFloat($('#minEntropy').val());
+                const minLength = parseInt($('#minLength').val());
+
+                const minScore = parseFloat($('#minScore').val());
+                const maxScore = parseFloat($('#maxScore').val());
+
+                const mlDecision = $('#mlDecision').val();
+
+                if (!isNaN(minEntropy) && entropy < minEntropy) return false;
+                if (!isNaN(minLength) && length < minLength) return false;
+
+                if (!isNaN(minScore) && (isNaN(score) || score < minScore)) return false;
+                if (!isNaN(maxScore) && (isNaN(score) || score > maxScore)) return false;
+
+                if (mlDecision && decision !== mlDecision) return false;
+
+                return true;
+            });
+
+            // ----------------------------------------------------
+            // DataTable init
+            // ----------------------------------------------------
+            table = $('#dlp').DataTable({
+                ajax: "/api/data",
+
+                pageLength: 100,
+                lengthMenu: [[50, 100, 500, 1000], [50, 100, 500, 1000]],
+                order: [[2, "desc"]],
+
+                columns: [
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: (_, __, row) =>
+                            `<input type="checkbox" class="row-select" value="${row.id}">`
+                    },
+                    { data: "value" },
+                    { 
+                        data: "snippet",
+                        render: v => `<div style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:monospace; font-size:12px; color:#555;" title="${v?.replace(/"/g, '&quot;')}">${v || "—"}</div>`
+                    },
+                    { data: "entropy" },
+                    { data: "length" },
+                    { data: "category" },
+                    {
+                        data: "ml_score",
+                        render: v => v == null ? "—" : v.toFixed(2)
+                    },
+                    {
+                        data: "ml_decision",
+                        render: v => v || "—"
+                    }
+                ]
+            });
+
+            // Redraw table on filter change
+            $('#minEntropy, #minLength, #minScore, #maxScore, #mlDecision')
+                .on('input change', function () {
+                    table.draw();
+                    $('#selectAll').prop('checked', false);
+                    updateCount();
+                });
+
+            // ----------------------------------------------------
+            // Select ALL (filtered rows only)
+            // ----------------------------------------------------
+            $('#selectAll').on('change', function () {
+                const checked = this.checked;
+                const rows = table.rows({ search: 'applied' }).nodes();
+                $('input.row-select', rows).prop('checked', checked);
+                updateCount();
+            });
+
+            // Individual checkbox
+            $('#dlp tbody').on('change', '.row-select', function () {
+                updateCount();
+                if (!this.checked) {
+                    $('#selectAll').prop('checked', false);
+                }
+            });
+
+        });
+
+        // ----------------------------------------------------
+        // Selected count
+        // ----------------------------------------------------
+        function updateCount() {
+            const count = document.querySelectorAll('.row-select:checked').length;
+            document.getElementById('count').innerText = `${count} selected`;
+        }
+
+        // ----------------------------------------------------
+        // Bulk action
+        // ----------------------------------------------------
+        function bulk(action) {
+            const ids = Array.from(document.querySelectorAll('.row-select:checked'))
+                .map(cb => cb.value);
+
+            if (!ids.length) {
+                alert("No rows selected");
+                return;
+            }
+
+            fetch("/api/bulk_label", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action, ids })
+            }).then(() => {
+                table.ajax.reload(null, false);
+                document.getElementById('count').innerText = "0 selected";
+                document.getElementById('selectAll').checked = false;
+            });
+        }
+    </script>
+
+</body>
+
+</html>

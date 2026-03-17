@@ -1,0 +1,70 @@
+# ----------------
+# Node
+# ----------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ----------------
+# Environment
+# ----------------
+.env
+.env.*
+!.env.example
+
+# ----------------
+# Logs
+# ----------------
+logs
+*.log
+
+# ----------------
+# OS files
+# ----------------
+.DS_Store
+Thumbs.db
+
+# ----------------
+# Build folders
+# ----------------
+dist/
+build/
+.next/
+out/
+
+# ----------------
+# ML / Models
+# ----------------
+*.pt
+*.pth
+*.bin
+*.model
+*.onnx
+
+# ----------------
+# Python
+# ----------------
+__pycache__/
+*.pyc
+
+# ----------------
+# IDE
+# ----------------
+.vscode/
+.idea/
+
+# ----------------
+# Misc
+# ----------------
+coverage/
+temp/
+tmp/
+venv/
+
+# Python
+**/__pycache__/
+*.pyc
+
+# datasets
+DLP model/promptprotect/datasets/

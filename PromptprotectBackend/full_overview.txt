@@ -1,0 +1,550 @@
+Mongo database : promptprotect  (local database)
+
+Main tables : organizations, users, policies, groups, customrules
+
+1. organizations 
+
+/** 
+* Paste one or more documents here
+*/
+{
+  "orgName": "DES",
+  "orgEmail": "hiten.malvi@dataelicit.com",
+  "orgPassword": "$2b$10$kul6Esi02kEdI1GLZ9ypYe/ecBBIiphjPplV1Y3amdurm0QR3h91.",  //hashed password
+  "orgKey": "10a65c0c5c844eda3b886152852edd19681e59b5837db3ba0386da7b032c156d",
+  "hecToken": "idcjvnieu5h8w40nurtbv93w04grviw3orj90nv3",
+  "hecUrl": "https://12.231.341.41/services",
+  "splunk_sourcetype": "DES",
+  "lastLogin": {
+    "$date": "2026-01-05T12:39:42.805Z"
+  },
+  "createdAt": {
+    "$date": "2026-01-05T12:39:42.805Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-05T13:16:02.744Z"
+  },
+  "__v": 0
+}
+
+2. Users
+
+{
+  "_id": {
+    "$oid": "695bb10ec559210a25f1db1f"
+  },
+  "userName": "Hiten",
+  "userEmail": "hiten.malvi@dataelicit.com",
+  "userPassword": "$2b$10$kul6Esi02kEdI1GLZ9ypYe/ecBBIiphjPplV1Y3amdurm0QR3h91.",
+  "userRole": [
+    "ORG_ADMIN"
+  ],
+  "org": {
+    "$oid": "695bb10ec559210a25f1db1d"
+  },
+  "createdBy": "Hiten",
+  "updatedBy": "Hiten",
+  "createdAt": {
+    "$date": "2026-01-05T12:39:42.812Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-05T12:39:42.812Z"
+  },
+  "__v": 0
+}
+
+
+3. policies
+
+{
+  "_id": {
+    "$oid": "697738c4d9c0383c6c812557"
+  },
+  "policyName": "testing",
+  "rulesForPolicy": [
+    "PII",
+    "PCI",
+    "PHI",
+    "SECRETS",
+    "INFRASTRUCTURE",
+    "CRYPTOCURRENCY"
+  ],
+  "action": "PROMPT_USER",
+  "customRules": [
+    {
+      "$oid": "696f6c78f785fd5e8c11cb74"
+    }
+  ],
+  "org": {
+    "$oid": "695bb10ec559210a25f1db1d"
+  },
+  "createdBy": "nishith",
+  "updatedBy": "nishith",
+  "createdAt": {
+    "$date": "2026-01-26T09:49:56.444Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-26T11:37:20.534Z"
+  },
+  "__v": 1
+}
+
+4. groups
+
+{
+  "_id": {
+    "$oid": "695bb8fb0d85429f51f7f6f0"
+  },
+  "groupName": "Grp1",
+  "groupUsers": [
+    {
+      "$oid": "695bbd916af7fb53e50a444c"
+    },
+    {
+      "$oid": "695bb10ec559210a25f1db1f"
+    }
+  ],
+  "policiesAttached": [
+    {
+      "$oid": "697738c4d9c0383c6c812557"
+    },
+    {
+      "$oid": "69776f077f4a3a4e9cb9c84c"
+    }
+  ],
+  "org": {
+    "$oid": "695bb10ec559210a25f1db1d"
+  },
+  "createdBy": "hiten.malvi",
+  "updatedBy": "nishith",
+  "createdAt": {
+    "$date": "2026-01-05T13:13:31.077Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-26T13:41:43.931Z"
+  },
+  "__v": 4
+}
+
+5. customRules
+
+{
+  "_id": {
+    "$oid": "696f6c78f785fd5e8c11cb74"
+  },
+  "org": {
+    "$oid": "695bb10ec559210a25f1db1d"
+  },
+  "ruleName": "HCD",
+  "description": "",
+  "ruleType": "REGEX",
+  "pattern": "HCD-I[0-9]",
+  "flags": "g",
+  "category": "custom",
+  "redactionLabel": "CUSTOM_HCD",
+  "createdBy": "hiten.malvi",
+  "updatedBy": "nishith",
+  "createdAt": {
+    "$date": "2026-01-20T11:52:24.082Z"
+  },
+  "updatedAt": {
+    "$date": "2026-01-20T14:59:15.942Z"
+  },
+  "__v": 0
+}
+
+
+
+User, policies, groups, customRules : all have CRUD options from frontend
+
+user has additionally : login
+
+organizations has : signup only
+
+
+in the extension which calls backend through api call
+
+app.post("/pii-scan", async (req, res) => {
+  console.log("Received /pii-scan request");
+  try {
+    const apiKey = req.header("x-api-key");
+    const userEmail = req.header("x-useremail");
+
+    const result = await runPiiScan({
+      apiKey,
+      userEmail,
+      ...req.body
+    });
+
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(401).json({ success: false, message: err.message });
+  }
+});
+
+has req body like : 
+{
+    "conversation": "myy email is hiten@gmail.com, my ip is 192.168.7.7",
+    "requestId": "ext_1769513813864",
+    "timestamp": "2026-01-27T11:36:53.864Z",
+    "url": "https://chatgpt.com/",
+    "chatgptUser": "unknown"
+}
+
+has response body like : 
+{
+    "success": true,
+    "piiDetected": true,
+    "action": "PROMPT_USER",
+    "requiresUserDecision": true,
+    "findings": [
+        {
+            "category": "private_ip_range",
+            "value": "192.168.7.7",
+            "index": 39,
+            "end": 50,
+            "confidence_score": 0.85,
+            "group": "infrastructure"
+        },
+        {
+            "category": "email",
+            "value": "hiten@gmail.com",
+            "index": 13,
+            "end": 28,
+            "confidence_score": 0.95,
+            "group": "pii"
+        }
+    ],
+    "original": "myy email is hiten@gmail.com, my ip is 192.168.7.7",
+    "redactedConversation": "myy email is [EMAIL], my ip is [PRIVATE_IP_RANGE]",
+    "allowedGroups": [
+        "pii",
+        "infrastructure"
+    ],
+    "timestamp": "2026-01-27T11:36:53.864Z"
+}
+
+
+
+
+and i have strict policies like Block, redact and partial redact , but other like user_choice : in which user will get pop up to block or redact the promptprotect
+
+so that also has the userAction call
+
+request : 
+{
+    "res_body": {
+        "success": true,
+        "chatgpt_user": "chatgptUser",
+        "original": "myy email is hiten@gmail.com, my ip is 192.168.7.7",
+        "redacted": "myy email is [EMAIL], my ip is [PRIVATE_IP_RANGE]",
+        "pii_detected": true,
+        "pii_categories": [],
+        "findings": [
+            {
+                "category": "private_ip_range",
+                "value": "192.168.7.7",
+                "index": 39,
+                "end": 50,
+                "confidence_score": 0.85,
+                "group": "infrastructure"
+            },
+            {
+                "category": "email",
+                "value": "hiten@gmail.com",
+                "index": 13,
+                "end": 28,
+                "confidence_score": 0.95,
+                "group": "pii"
+            }
+        ],
+        "redaction_details": [],
+        "url": "chatgpt.com",
+        "timestamp": "2026-01-27T11:36:58.092Z"
+    },
+    "user_action": "send_redacted",
+    "timestamp": "2026-01-27T11:36:58.092Z"
+}
+
+
+response : 
+{"success":true,"message":"User action logged"}
+
+
+
+DASHBOARD OBJECTS — ORG_ADMIN & ADMIN (Full Visibility)
+
+These users see everyone + everything in the organization.
+
+1️⃣ Global Activity Overview
+
+Total users
+
+Total scans
+
+Total detections
+
+Total blocks / redactions
+
+Total risky actions
+
+2️⃣ User Risk Overview (User-wise table)
+
+Per user:
+
+User email
+
+Role(s)
+
+Total scans
+
+PII detections count
+
+Block vs Redact vs Allow ratio
+
+Last activity time
+
+Risk score (derived)
+
+➡️ Click user → full timeline
+
+3️⃣ Scan Events Timeline (Org-wide)
+
+Each event:
+
+Timestamp
+
+User
+
+Source (ChatGPT / Chrome / Google)
+
+Categories detected
+
+Policy action
+
+User decision
+
+Outcome
+
+➡️ Click event → deep scan detail
+
+4️⃣ Detection Categories Overview
+
+Category name (PII / PCI / Secrets / etc.)
+
+Count
+
+Trend (↑ ↓)
+
+Top users triggering it
+
+Top policies involved
+
+5️⃣ User Decision Analytics
+
+Who blocks most
+
+Who ignores warnings
+
+Who frequently sends redacted
+
+Policy effectiveness
+
+6️⃣ Policy Effectiveness Dashboard
+
+Policy name
+
+Trigger count
+
+Blocked %
+
+User override %
+
+Risk reduction score
+
+7️⃣ Group Impact View
+
+Group name
+
+Users in group
+
+Total detections
+
+Risk concentration
+
+8️⃣ Admin & Management Actions
+
+User created / updated / deleted
+
+Policy changes
+
+Group changes
+
+Role changes
+
+(Full audit visibility)
+
+9️⃣ High-Risk Alerts
+
+Repeated risky behavior
+
+Spike in detections
+
+Policy bypass attempts
+
+🔟 Compliance / Audit View
+
+Full immutable event list
+
+Exportable
+
+Time-range filters
+
+User / category filters
+
+🟦 DASHBOARD OBJECTS — NON-ADMIN USERS
+
+(USER_MANAGER, POLICY_MANAGER, GROUP_MANAGER, DEFAULT)
+
+These users see ONLY THEIR OWN DATA.
+
+1️⃣ My Activity Overview
+
+My scans
+
+My detections
+
+My blocks / redactions
+
+My last activity
+
+2️⃣ My Scan Timeline
+
+Each event:
+
+Timestamp
+
+Source
+
+Categories detected
+
+Action applied
+
+Decision taken
+
+(No other users visible)
+
+3️⃣ My Detection Breakdown
+
+Categories I triggered
+
+Frequency
+
+Trends (personal)
+
+4️⃣ My Decisions History
+
+When I blocked
+
+When I sent redacted
+
+When I was warned
+
+5️⃣ My Risk Summary
+
+Personal risk score
+
+Comparison vs org average (optional, anonymized)
+
+6️⃣ Policy Context (Read-only)
+
+Which policy triggered
+
+Why it triggered
+
+What action it enforced
+
+(No policy management)
+
+7️⃣ Security Awareness Panel
+
+“You triggered X sensitive events this week”
+
+“Most common category you triggered”
+
+“Recommended best practices”
+
+
+
+USER SCAN SUMMARY
+
+CREATE OR REPLACE VIEW user_scan_summary_final AS
+SELECT
+  org,
+  actor_email,
+  sum(scans)        AS total_scans,
+  sum(detections)   AS total_detections,
+  sum(blocks)       AS total_blocks,
+  max(last_activity) AS last_activity
+FROM user_scan_summary
+GROUP BY org, actor_email;
+
+USER CATEGORY COUNTS
+
+CREATE VIEW user_category_counts_final AS
+SELECT
+  org,
+  actor_email,
+  category,
+  sum(cnt) AS count
+FROM user_category_counts
+GROUP BY org, actor_email, category;
+
+
+SOURCE BREAKDOWN
+
+CREATE VIEW source_stats_final AS
+SELECT
+  org,
+  source,
+  sum(cnt) AS count
+FROM source_stats
+GROUP BY org, source;
+
+
+POLICY EFFECTIVENESS
+
+CREATE VIEW policy_effectiveness_final AS
+SELECT
+  org,
+  policy,
+  sum(triggered) AS triggered,
+  sum(blocked)   AS blocked,
+  round(sum(blocked) / sum(triggered), 3) AS block_ratio
+FROM policy_effectiveness
+GROUP BY org, policy;
+
+SCAN TIMELINE
+
+SELECT
+  ts,
+  actor_email,
+  source,
+  action_taken,
+  pii_detected,
+  detected_rules
+FROM pii_analytics_final
+WHERE org = 'DES'
+ORDER BY ts DESC
+LIMIT 500;
+
+SELECT
+  ts,
+  source,
+  action_taken,
+  detected_rules
+FROM pii_analytics_final
+WHERE actor_email = 'user@email'
+ORDER BY ts DESC
+LIMIT 200;
+

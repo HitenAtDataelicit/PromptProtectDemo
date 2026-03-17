@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptProtect SAML Test</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #38bdf8;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        p {
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-dim);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: var(--primary);
+            color: var(--bg);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            display: none;
+        }
+
+        .status {
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .groups {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .group-tag {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>SAML Login Test</h1>
+        <p>Enter your Organization Key to initiate SAML login via Okta.</p>
+
+        <div class="form-group">
+            <label for="orgKey">Organization Key (from Mongo)</label>
+            <input type="text" id="orgKey" placeholder="e.g. 7176dc645860..." value="">
+        </div>
+
+        <button onclick="login()">Login with SAML</button>
+
+        <div id="result">
+            <div id="statusText" class="status"></div>
+            <div id="userDetails"></div>
+            <div id="groupList" class="groups"></div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const email = urlParams.get('email');
+        const groups = urlParams.get('groups');
+        const error = urlParams.get('error');
+
+        if (success === 'true') {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('statusText').innerText = '✅ Authentication Successful';
+            document.getElementById('statusText').style.color = 'var(--success)';
+            document.getElementById('userDetails').innerText = `Email: ${email}`;
+
+            if (groups) {
+                const groupArr = groups.split(',');
+                const groupList = document.getElementById('groupList');
+                groupArr.forEach(g => {
+                    const span = document.createElement('span');
+                    span.className = 'group-tag';
+                    span.innerText = g;
+                    groupList.appendChild(span);
+                });
+            }
+        } else if (error === 'true') {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('statusText').innerText = '❌ Authentication Failed';
+            document.getElementById('statusText').style.color = 'var(--error)';
+        }
+
+        function login() {
+            const orgKey = document.getElementById('orgKey').value;
+            if (!orgKey) {
+                alert('Please enter an Org Key');
+                return;
+            }
+            // Redirect to backend SAML endpoint
+            window.location.href = `/api/sso/login/saml/${orgKey}`;
+        }
+    </script>
+</body>
+
+</html>

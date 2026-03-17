@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detection Console</title>
+  <style>
+    :root{
+      --bg:#020617;
+      --panel:rgba(15,23,42,.50);
+      --panel2:rgba(2,6,23,.55);
+      --border:rgba(148,163,184,.14);
+      --text:#e2e8f0;
+      --muted:#94a3b8;
+      --blue:#38bdf8;
+      --blue2:#2563eb;
+      --good:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --shadow: 0 22px 70px -48px rgba(37,99,235,.55);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+    .bgfx{
+      position:fixed; inset:0; pointer-events:none;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(37,99,235,0.20), transparent 45%),
+        radial-gradient(circle at 80% 30%, rgba(56,189,248,0.14), transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(37,99,235,0.10), transparent 50%);
+    }
+    .gridfx{
+      position:fixed; inset:0; pointer-events:none;
+      opacity:.32;
+      background-image:
+        linear-gradient(to right, rgba(148,163,184,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148,163,184,0.06) 1px, transparent 1px);
+      background-size:44px 44px;
+    }
+
+    .wrap{
+      position:relative;
+      max-width:1200px;
+      margin:0 auto;
+      padding:26px 18px 40px;
+    }
+    .topbar{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0;
+      font-size:24px;
+      letter-spacing:-.02em;
+    }
+    .subtitle{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:rgba(15,23,42,.45);
+      min-width: 220px;
+    }
+    .pill .k{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    .pill .v{
+      font-size:13px;
+      font-weight:600;
+      margin-top:3px;
+    }
+    .statusDot{
+      width:10px; height:10px; border-radius:999px;
+      background:var(--good);
+      box-shadow:0 0 0 4px rgba(16,185,129,.15);
+      flex:0 0 auto;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:18px 0 18px;
+    }
+    .tabBtn{
+      cursor:pointer;
+      user-select:none;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,.35);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:transform .12s ease, background .12s ease;
+    }
+    .tabBtn:hover{ transform: translateY(-1px); }
+    .tabBtn.active{
+      background:rgba(37,99,235,.16);
+      border-color: rgba(56,189,248,.30);
+    }
+
+    .panel{
+      border:1px solid var(--border);
+      background: var(--panel);
+      border-radius:18px;
+      padding:14px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panelHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .panelHead h2{
+      margin:0;
+      font-size:13px;
+      letter-spacing:-.01em;
+      font-weight:700;
+    }
+    .panelHead p{
+      margin:6px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      max-width: 72ch;
+      line-height:1.4;
+    }
+    .panelInner{
+      border:1px solid rgba(148,163,184,.12);
+      background: var(--panel2);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .grid2{ display:grid; grid-template-columns:1fr; gap:14px; }
+    .grid3{ display:grid; grid-template-columns:1fr; gap:14px; }
+    @media(min-width: 980px){
+      .grid2{ grid-template-columns:1fr 1fr; }
+      .grid3{ grid-template-columns:1fr 1fr 1fr; }
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:12px;
+    }
+    @media(min-width: 880px){
+      .kpis{ grid-template-columns: repeat(6, minmax(0,1fr)); }
+    }
+    .kpi{
+      border:1px solid rgba(148,163,184,.14);
+      border-radius:16px;
+      background:rgba(15,23,42,.35);
+      padding:12px;
+      transition: transform .12s ease;
+    }
+    .kpi:hover{ transform: translateY(-1px); }
+    .kpi .label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    .kpi .value{
+      margin-top:8px;
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-.02em;
+    }
+    .kpi .hint{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .selectRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    select{
+      background:rgba(2,6,23,.55);
+      border:1px solid rgba(148,163,184,.18);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      outline:none;
+      min-width: 260px;
+    }
+    .smallNote{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .chartBox{
+      height:260px;
+      position:relative;
+    }
+    canvas{ width:100%; height:100%; display:block; }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 720px;
+      font-size:13px;
+    }
+    thead{
+      background:rgba(2,6,23,.55);
+    }
+    th{
+      text-align:left;
+      padding:10px;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+      border-bottom:1px solid rgba(148,163,184,.12);
+    }
+    td{
+      padding:10px;
+      border-top:1px solid rgba(148,163,184,.10);
+      color:var(--text);
+      vertical-align:top;
+    }
+    tbody tr:hover{ background: rgba(15,23,42,.25); }
+    .tableWrap{
+      border:1px solid rgba(148,163,184,.14);
+      border-radius:16px;
+      background:rgba(2,6,23,.35);
+      overflow:auto;
+    }
+
+    .riskPill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:12px;
+      border:1px solid rgba(148,163,184,.18);
+    }
+    .riskHigh{ background:rgba(251,113,133,.12); color:#fecdd3; border-color: rgba(251,113,133,.28); }
+    .riskMed{ background:rgba(251,191,36,.12); color:#fde68a; border-color: rgba(251,191,36,.28); }
+    .riskLow{ background:rgba(52,211,153,.12); color:#bbf7d0; border-color: rgba(52,211,153,.28); }
+
+    .hidden{ display:none !important; }
+
+    .empty{
+      padding:24px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      border:1px dashed rgba(148,163,184,.22);
+      border-radius:16px;
+      background:rgba(2,6,23,.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="bgfx"></div>
+  <div class="gridfx"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Detection Console</h1>
+        <div class="subtitle">Threat signals, detections, churn, and personal events split into sane sections.</div>
+      </div>
+      <div class="pill">
+        <span class="statusDot"></span>
+        <div>
+          <div class="k">Org</div>
+          <div class="v" id="orgName">Demo Org</div>
+        </div>
+        <div style="width:1px;height:28px;background:rgba(148,163,184,.16); margin:0 8px;"></div>
+        <div>
+          <div class="k">Status</div>
+          <div class="v">Active</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tabBtn active" data-tab="overview">Overview</div>
+      <div class="tabBtn" data-tab="userDetections">User Detections</div>
+      <div class="tabBtn" data-tab="churn">Churn</div>
+      <div class="tabBtn" data-tab="myEvents">My Events</div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="tab-overview">
+      <div class="panel">
+        <div class="panelHead">
+          <div>
+            <h2>Security Overview</h2>
+            <p>Org level KPIs and high level trend lines. This is your big picture section.</p>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="label">Total Events</div><div class="value" id="kpi_totalEvents">0</div><div class="hint">All telemetry collected</div></div>
+          <div class="kpi"><div class="label">Prompts Scanned</div><div class="value" id="kpi_promptsScanned">0</div><div class="hint">Coverage across tools</div></div>
+          <div class="kpi"><div class="label">Detected Events</div><div class="value" id="kpi_detectedEvents">0</div><div class="hint">Flagged by policies</div></div>
+          <div class="kpi"><div class="label">High Risk</div><div class="value" id="kpi_highRisk">0</div><div class="hint">Critical findings</div></div>
+          <div class="kpi"><div class="label">Blocked</div><div class="value" id="kpi_blocked">0</div><div class="hint">Stopped at source</div></div>
+          <div class="kpi"><div class="label">Detection Rate</div><div class="value" id="kpi_detectionRate">0%</div><div class="hint">Detected per scanned</div></div>
+        </div>
+
+        <div style="height:14px;"></div>
+
+        <div class="grid3">
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>Events Over Time</h2><p>Aggregated event volume by day.</p></div></div>
+            <div class="chartBox"><canvas id="chart_overview_events"></canvas></div>
+          </div>
+
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>High Risk Trend</h2><p>Critical signals over time.</p></div></div>
+            <div class="chartBox"><canvas id="chart_overview_risk"></canvas></div>
+          </div>
+
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>Category Volume</h2><p>Totals by category.</p></div></div>
+            <div class="chartBox"><canvas id="chart_overview_category"></canvas></div>
+          </div>
+        </div>
+
+        <div style="height:14px;"></div>
+
+        <div class="grid2">
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>Last 5 Detections</h2><p>Most recent detections across the org.</p></div></div>
+            <div class="tableWrap">
+              <table>
+                <thead><tr><th>Time</th><th>User</th><th>Risk</th><th>Findings</th></tr></thead>
+                <tbody id="tbl_last5Detections"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>Last 5 User Actions</h2><p>Recent user actions on protected prompts.</p></div></div>
+            <div class="tableWrap">
+              <table>
+                <thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead>
+                <tbody id="tbl_last5Actions"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- USER DETECTIONS -->
+    <section id="tab-userDetections" class="hidden">
+      <div class="panel">
+        <div class="panelHead">
+          <div>
+            <h2>User Detections</h2>
+            <p>Select a user to load their mini dashboard with trends, categories, and detailed events.</p>
+          </div>
+        </div>
+
+        <div class="panelInner">
+          <div class="selectRow">
+            <select id="userSelect"></select>
+            <div class="smallNote">Admin selects a user, then we render a focused dashboard for that person.</div>
+          </div>
+
+          <div id="userEmpty" class="empty hidden">No user data found.</div>
+
+          <div id="userMiniDash">
+            <div class="kpis" style="margin-top:10px;">
+              <div class="kpi"><div class="label">User Detections</div><div class="value" id="u_kpi_detections">0</div><div class="hint">Total findings</div></div>
+              <div class="kpi"><div class="label">High Risk</div><div class="value" id="u_kpi_highRisk">0</div><div class="hint">Critical prompts</div></div>
+              <div class="kpi"><div class="label">Blocked</div><div class="value" id="u_kpi_blocked">0</div><div class="hint">Hard stops</div></div>
+              <div class="kpi"><div class="label">Redacted</div><div class="value" id="u_kpi_redacted">0</div><div class="hint">Allowed with masking</div></div>
+              <div class="kpi"><div class="label">Most Common</div><div class="value" id="u_kpi_topCategory">-</div><div class="hint">Top category</div></div>
+              <div class="kpi"><div class="label">Detection Rate</div><div class="value" id="u_kpi_rate">0%</div><div class="hint">Detected per scanned</div></div>
+            </div>
+
+            <div style="height:14px;"></div>
+
+            <div class="grid3">
+              <div class="panelInner">
+                <div class="panelHead"><div><h2>User Events Over Time</h2><p>Daily detections for selected user.</p></div></div>
+                <div class="chartBox"><canvas id="chart_user_timeseries"></canvas></div>
+              </div>
+
+              <div class="panelInner">
+                <div class="panelHead"><div><h2>User Category Volume</h2><p>What they trigger most.</p></div></div>
+                <div class="chartBox"><canvas id="chart_user_categories"></canvas></div>
+              </div>
+
+              <div class="panelInner">
+                <div class="panelHead"><div><h2>User Actions</h2><p>Blocked vs redacted vs allowed summary.</p></div></div>
+                <div class="chartBox"><canvas id="chart_user_actions"></canvas></div>
+              </div>
+            </div>
+
+            <div style="height:14px;"></div>
+
+            <div class="panelInner">
+              <div class="panelHead"><div><h2>User Event Log</h2><p>Every event row for this user.</p></div></div>
+              <div class="tableWrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th><th>Risk</th><th>Category</th><th>Finding</th><th>Action</th><th>Source</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbl_userEvents"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CHURN -->
+    <section id="tab-churn" class="hidden">
+      <div class="panel">
+        <div class="panelHead">
+          <div>
+            <h2>Churn</h2>
+            <p>Admin create, update, delete churn. This section is for audit and governance.</p>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>User Churn</h2><p>Create, update, delete by admin.</p></div></div>
+            <div class="chartBox"><canvas id="chart_churn_users"></canvas></div>
+          </div>
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>Policy Churn</h2><p>Create, update, delete by admin.</p></div></div>
+            <div class="chartBox"><canvas id="chart_churn_policies"></canvas></div>
+          </div>
+          <div class="panelInner">
+            <div class="panelHead"><div><h2>Group Churn</h2><p>Create, update, delete by admin.</p></div></div>
+            <div class="chartBox"><canvas id="chart_churn_groups"></canvas></div>
+          </div>
+        </div>
+
+        <div style="height:14px;"></div>
+
+        <div class="panelInner">
+          <div class="panelHead"><div><h2>Recent Admin Actions</h2><p>Latest admin activity feed.</p></div></div>
+          <div class="tableWrap">
+            <table>
+              <thead><tr><th>Time</th><th>Admin</th><th>Action</th></tr></thead>
+              <tbody id="tbl_adminActions"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- MY EVENTS -->
+    <section id="tab-myEvents" class="hidden">
+      <div class="panel">
+        <div class="panelHead">
+          <div>
+            <h2>My Events</h2>
+            <p>Your personal activity stream.</p>
+          </div>
+        </div>
+
+        <div class="panelInner">
+          <div class="smallNote">Fake data now. Later bind this to logged-in user email.</div>
+          <div style="height:10px;"></div>
+          <div class="tableWrap">
+            <table>
+              <thead><tr><th>Time</th><th>Risk</th><th>Category</th><th>Finding</th><th>Action</th><th>Source</th></tr></thead>
+              <tbody id="tbl_myEvents"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    /* ---------------- Utilities ---------------- */
+
+    function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min }
+
+    function pick(arr, weights){
+      if (!weights) return arr[randInt(0, arr.length-1)]
+      const total = weights.reduce((a,b)=>a+b,0)
+      let r = Math.random()*total
+      for (let i=0;i<arr.length;i++){
+        r -= weights[i]
+        if (r <= 0) return arr[i]
+      }
+      return arr[arr.length-1]
+    }
+
+    function fmtDT(d){
+      const y=d.getFullYear()
+      const m=String(d.getMonth()+1).padStart(2,"0")
+      const day=String(d.getDate()).padStart(2,"0")
+      const hh=String(d.getHours()).padStart(2,"0")
+      const mm=String(d.getMinutes()).padStart(2,"0")
+      return `${y}-${m}-${day} ${hh}:${mm}`
+    }
+
+    function fmtNum(n){
+      const x = Number(n)
+      if (Number.isNaN(x)) return String(n)
+      return x.toLocaleString()
+    }
+
+    function escapeHTML(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;")
+    }
+
+    function riskPillHTML(risk){
+      const v = String(risk||"").toLowerCase()
+      const cls = v.includes("high") ? "riskHigh" : v.includes("med") ? "riskMed" : "riskLow"
+      return `<span class="riskPill ${cls}">${escapeHTML(risk)}</span>`
+    }
+
+    function genSeries(days, minV, maxV){
+      const out = []
+      const base = new Date("2026-01-28T00:00:00")
+      for (let i=days-1;i>=0;i--){
+        const d = new Date(base.getTime() - i*24*60*60*1000)
+        const label = d.toISOString().slice(5,10)
+        out.push({ t: label, c: randInt(minV, maxV) })
+      }
+      return out
+    }
+
+    /* ---------------- Fake data builders ---------------- */
+
+    function genUserEvents(user, n){
+      const categories = ["PII","PHI","PCI","Secrets","Infrastructure"]
+      const sources = ["ChatGPT","Grok","Claude","Gemini","Copilot","Web Search"]
+      const findings = {
+        PII: ["Email address", "Phone number", "Home address", "Full name", "Gov ID pattern"],
+        PHI: ["Diagnosis", "Medication info", "Insurance member ID", "Provider name"],
+        PCI: ["Card number pattern", "CVV pattern", "Expiry date", "Billing zip"],
+        Secrets: ["API key pattern", "Access token", "Private key block", "Password-like string"],
+        Infrastructure: ["IP address", "Hostname", "Cloud URL", "Open port mention"]
+      }
+      const actions = ["Blocked", "Redacted and sent", "Allowed after review"]
+      const risks = ["Low","Medium","High"]
+
+      const rows = []
+      const base = new Date("2026-01-28T16:05:00")
+      for (let i=0;i<Math.min(n, 80);i++){
+        const d = new Date(base.getTime() - i*randInt(3, 22)*60000)
+        const cat = pick(categories, [40,10,8,28,14])
+        const risk = pick(risks, [45,35,20])
+        const action = pick(actions, [30,45,25])
+        rows.push({
+          timestamp: fmtDT(d),
+          risk,
+          category: cat,
+          finding: pick(findings[cat]),
+          action,
+          source: pick(sources),
+          user
+        })
+      }
+      return rows
+    }
+
+    function makeUsers(){
+      const users = [
+        "akash@company.com",
+        "riya@company.com",
+        "john@company.com",
+        "meera@company.com",
+        "sam@company.com"
+      ]
+      const byUser = {}
+      for (const u of users){
+        const scanned = randInt(1200, 4200)
+        const detections = randInt(60, 260)
+        const highRisk = randInt(4, 35)
+        const blocked = randInt(6, 80)
+        const redacted = randInt(10, 110)
+
+        const cats = [
+          { k:"PII", v: randInt(12, 80) },
+          { k:"Secrets", v: randInt(14, 95) },
+          { k:"Infrastructure", v: randInt(6, 55) },
+          { k:"PHI", v: randInt(0, 35) },
+          { k:"PCI", v: randInt(0, 22) }
+        ].sort((a,b)=>b.v-a.v)
+
+        const actions = [
+          { k:"Blocked", v: blocked },
+          { k:"Redacted", v: redacted },
+          { k:"Allowed", v: Math.max(0, detections - blocked - redacted) }
+        ]
+
+        const ts = genSeries(14, 0, Math.max(10, Math.floor(detections/2)))
+        const events = genUserEvents(u, detections)
+
+        byUser[u] = {
+          stats: {
+            scanned,
+            detections,
+            highRisk,
+            blocked,
+            redacted,
+            rate: scanned ? detections / scanned : 0,
+            topCategory: cats[0]?.k || "-"
+          },
+          timeSeries: ts,
+          categories: cats,
+          actions,
+          events
+        }
+      }
+      return byUser
+    }
+
+    function buildMyEvents(usersByUser, me){
+      const u = usersByUser?.[me]
+      if (u && u.events && u.events.length) return u.events.slice(0, 18)
+      return [
+        { timestamp:"2026-01-28 16:02", risk:"High", category:"Secrets", finding:"API key pattern", action:"Blocked", source:"ChatGPT", user: me }
+      ]
+    }
+
+    /* ---------------- Simple canvas charts ---------------- */
+
+    function drawEmpty(ctx,w,h){
+      ctx.strokeStyle = "rgba(148,163,184,0.18)"
+      ctx.setLineDash([6,6])
+      ctx.strokeRect(18, 18, w-36, h-36)
+      ctx.setLineDash([])
+      ctx.fillStyle = "rgba(148,163,184,0.70)"
+      ctx.font = "13px ui-sans-serif, system-ui"
+      ctx.fillText("No data available", w/2 - 54, h/2 + 4)
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke){
+      const radius = Math.min(r, w/2, h/2)
+      ctx.beginPath()
+      ctx.moveTo(x+radius, y)
+      ctx.arcTo(x+w, y, x+w, y+h, radius)
+      ctx.arcTo(x+w, y+h, x, y+h, radius)
+      ctx.arcTo(x, y+h, x, y, radius)
+      ctx.arcTo(x, y, x+w, y, radius)
+      ctx.closePath()
+      if (fill) ctx.fill()
+      if (stroke) ctx.stroke()
+    }
+
+    function prepCanvas(canvas){
+      const ctx = canvas.getContext("2d")
+      const w = canvas.clientWidth
+      const h = canvas.clientHeight
+      canvas.width = Math.floor(w*2)
+      canvas.height = Math.floor(h*2)
+      ctx.setTransform(1,0,0,1,0,0)
+      ctx.scale(2,2)
+      ctx.clearRect(0,0,w,h)
+      return { ctx, w, h }
+    }
+
+    function drawLineChart(canvas, series, opts={}){
+      const { ctx, w, h } = prepCanvas(canvas)
+      const pad = 34
+      const innerW = w - pad*2
+      const innerH = h - pad*2
+      const data = Array.isArray(series) ? series : []
+      if (!data.length){ drawEmpty(ctx,w,h); return }
+
+      const maxY = Math.max(...data.map(d=>d.c), 1)
+      const minY = Math.min(...data.map(d=>d.c), 0)
+      const range = Math.max(1, maxY-minY)
+
+      ctx.strokeStyle = "rgba(148,163,184,0.12)"
+      ctx.lineWidth = 1
+      for (let i=0;i<=4;i++){
+        const y = pad + (innerH*i/4)
+        ctx.beginPath()
+        ctx.moveTo(pad, y)
+        ctx.lineTo(pad+innerW, y)
+        ctx.stroke()
+      }
+
+      ctx.fillStyle = "rgba(148,163,184,0.85)"
+      ctx.font = "11px ui-sans-serif, system-ui"
+      ctx.fillText(String(maxY), 8, pad+4)
+      ctx.fillText(String(minY), 8, pad+innerH)
+
+      const stroke = opts.stroke || "rgba(56,189,248,1)"
+      ctx.strokeStyle = stroke
+      ctx.lineWidth = 2.6
+      ctx.beginPath()
+      data.forEach((d,i)=>{
+        const x = pad + (innerW * (i/(data.length-1 || 1)))
+        const y = pad + innerH * (1 - ((d.c-minY)/range))
+        if (i===0) ctx.moveTo(x,y)
+        else ctx.lineTo(x,y)
+      })
+      ctx.stroke()
+
+      const tickCount = Math.min(6, data.length)
+      for (let i=0;i<tickCount;i++){
+        const idx = Math.round(i*(data.length-1)/(tickCount-1 || 1))
+        const x = pad + (innerW * (idx/(data.length-1 || 1)))
+        ctx.fillStyle = "rgba(148,163,184,0.85)"
+        ctx.font = "11px ui-sans-serif, system-ui"
+        ctx.fillText(data[idx].t, Math.max(0, x-14), h-10)
+      }
+    }
+
+    function drawBarChart(canvas, items, opts={}){
+      const { ctx, w, h } = prepCanvas(canvas)
+      const pad = 34
+      const innerW = w - pad*2
+      const innerH = h - pad*2
+      const data = Array.isArray(items) ? items : []
+      if (!data.length){ drawEmpty(ctx,w,h); return }
+
+      const maxY = Math.max(...data.map(d=>d.v), 1)
+
+      ctx.strokeStyle = "rgba(148,163,184,0.12)"
+      ctx.lineWidth = 1
+      for (let i=0;i<=4;i++){
+        const y = pad + (innerH*i/4)
+        ctx.beginPath()
+        ctx.moveTo(pad, y)
+        ctx.lineTo(pad+innerW, y)
+        ctx.stroke()
+      }
+
+      const gap = 10
+      const barW = Math.max(10, (innerW - gap*(data.length-1))/data.length)
+
+      data.forEach((d,i)=>{
+        const x = pad + i*(barW+gap)
+        const barH = innerH*(d.v/maxY)
+        const y = pad + (innerH - barH)
+
+        const fill = opts.fill || "rgba(37,99,235,0.95)"
+        ctx.fillStyle = fill
+        roundRect(ctx, x, y, barW, barH, 10, true, false)
+
+        ctx.fillStyle = "rgba(148,163,184,0.85)"
+        ctx.font = "11px ui-sans-serif, system-ui"
+        const label = String(d.k).slice(0,6)
+        ctx.fillText(label, x, h-10)
+      })
+    }
+
+    function drawStackBar(canvas, items, opts={}){
+      const { ctx, w, h } = prepCanvas(canvas)
+      const pad = 34
+      const innerW = w - pad*2
+      const innerH = h - pad*2
+      const data = Array.isArray(items) ? items : []
+      if (!data.length){ drawEmpty(ctx,w,h); return }
+
+      const total = data.reduce((a,b)=>a+(b.v||0),0) || 1
+      const colors = opts.colors || ["rgba(251,113,133,.9)", "rgba(56,189,248,.9)", "rgba(52,211,153,.9)"]
+
+      const x = pad
+      const y = pad + innerH/2 - 18
+      const H = 36
+      let offset = 0
+      data.forEach((d,i)=>{
+        const segW = innerW * ((d.v||0)/total)
+        ctx.fillStyle = colors[i % colors.length]
+        roundRect(ctx, x+offset, y, segW, H, 12, true, false)
+        offset += segW
+      })
+
+      ctx.fillStyle = "rgba(148,163,184,0.85)"
+      ctx.font = "12px ui-sans-serif, system-ui"
+      let lx = pad
+      data.forEach((d,i)=>{
+        const txt = `${d.k}: ${d.v}`
+        ctx.fillText(txt, lx, y + H + 26)
+        lx += 160
+      })
+    }
+
+    /* ---------------- Build ORG safely (no self-reference) ---------------- */
+
+    const USERS = makeUsers()
+
+    const ORG = {
+      orgName: "Demo Org",
+      overview: {
+        kpis: {
+          totalEvents: 128904,
+          promptsScanned: 92214,
+          detectedEvents: 17420,
+          highRisk: 620,
+          blocked: 2140,
+          detectionRate: 0.1889
+        },
+        eventsTimeSeries: genSeries(14, 1200, 2600),
+        riskTrend: genSeries(14, 12, 62),
+        categoryBar: [
+          { k: "PII", v: 8120 },
+          { k: "PHI", v: 2210 },
+          { k: "PCI", v: 980 },
+          { k: "Secrets", v: 4310 },
+          { k: "Infrastructure", v: 1800 }
+        ],
+        last5Detections: [
+          { timestamp: "2026-01-28 16:02", user: "akash@company.com", risk: "High", findings: "API Key + Email" },
+          { timestamp: "2026-01-28 15:41", user: "riya@company.com", risk: "Medium", findings: "Phone number" },
+          { timestamp: "2026-01-28 15:22", user: "john@company.com", risk: "Low", findings: "Address partial" },
+          { timestamp: "2026-01-28 14:58", user: "meera@company.com", risk: "High", findings: "Card number pattern" },
+          { timestamp: "2026-01-28 14:33", user: "sam@company.com", risk: "Medium", findings: "Access token" }
+        ],
+        last5Actions: [
+          { timestamp: "2026-01-28 16:03", user: "akash@company.com", action: "Blocked prompt" },
+          { timestamp: "2026-01-28 15:43", user: "riya@company.com", action: "Redacted and sent" },
+          { timestamp: "2026-01-28 15:24", user: "john@company.com", action: "Allowed after review" },
+          { timestamp: "2026-01-28 15:00", user: "meera@company.com", action: "Blocked prompt" },
+          { timestamp: "2026-01-28 14:34", user: "sam@company.com", action: "Redacted and sent" }
+        ]
+      },
+      users: USERS,
+      churn: {
+        users: {
+          "admin@company.com": { create: 6, update: 14, delete: 2 },
+          "secops@company.com": { create: 2, update: 9, delete: 1 },
+          "it@company.com": { create: 3, update: 4, delete: 0 }
+        },
+        policies: {
+          "admin@company.com": { create: 4, update: 11, delete: 1 },
+          "secops@company.com": { create: 2, update: 7, delete: 0 },
+          "it@company.com": { create: 1, update: 3, delete: 0 }
+        },
+        groups: {
+          "admin@company.com": { create: 3, update: 5, delete: 1 },
+          "secops@company.com": { create: 1, update: 6, delete: 0 },
+          "it@company.com": { create: 2, update: 2, delete: 0 }
+        },
+        recent: [
+          { timestamp: "2026-01-28 15:55", admin: "secops@company.com", action: "Updated policy: Secrets -> BLOCK" },
+          { timestamp: "2026-01-28 15:10", admin: "admin@company.com", action: "Created group: Finance-Restricted" },
+          { timestamp: "2026-01-28 14:46", admin: "it@company.com", action: "Updated user: enforced SSO login" },
+          { timestamp: "2026-01-28 13:58", admin: "admin@company.com", action: "Updated policy: PII -> REDACT" },
+          { timestamp: "2026-01-28 13:21", admin: "secops@company.com", action: "Created policy: PCI Hard Block" }
+        ]
+      }
+    }
+
+    ORG.myEvents = buildMyEvents(ORG.users, "akash@company.com")
+
+    /* ---------------- Tabs wiring ---------------- */
+
+    const tabBtns = Array.from(document.querySelectorAll(".tabBtn"))
+    tabBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        tabBtns.forEach(b=>b.classList.remove("active"))
+        btn.classList.add("active")
+        const tab = btn.dataset.tab
+        showTab(tab)
+      })
+    })
+
+    function showTab(tab){
+      document.getElementById("tab-overview").classList.toggle("hidden", tab !== "overview")
+      document.getElementById("tab-userDetections").classList.toggle("hidden", tab !== "userDetections")
+      document.getElementById("tab-churn").classList.toggle("hidden", tab !== "churn")
+      document.getElementById("tab-myEvents").classList.toggle("hidden", tab !== "myEvents")
+
+      if (tab === "overview") renderOverview()
+      if (tab === "userDetections") renderUserDetections()
+      if (tab === "churn") renderChurn()
+      if (tab === "myEvents") renderMyEvents()
+    }
+
+    /* ---------------- Rendering ---------------- */
+
+    let overviewRendered = false
+    function renderOverview(){
+      document.getElementById("orgName").textContent = ORG.orgName
+
+      const k = ORG.overview.kpis
+      document.getElementById("kpi_totalEvents").textContent = fmtNum(k.totalEvents)
+      document.getElementById("kpi_promptsScanned").textContent = fmtNum(k.promptsScanned)
+      document.getElementById("kpi_detectedEvents").textContent = fmtNum(k.detectedEvents)
+      document.getElementById("kpi_highRisk").textContent = fmtNum(k.highRisk)
+      document.getElementById("kpi_blocked").textContent = fmtNum(k.blocked)
+      document.getElementById("kpi_detectionRate").textContent = `${Math.round((k.detectionRate||0)*100)}%`
+
+      const detTbody = document.getElementById("tbl_last5Detections")
+      detTbody.innerHTML = ORG.overview.last5Detections.map(r=>`
+        <tr>
+          <td>${escapeHTML(r.timestamp)}</td>
+          <td>${escapeHTML(r.user)}</td>
+          <td>${riskPillHTML(r.risk)}</td>
+          <td>${escapeHTML(r.findings)}</td>
+        </tr>
+      `).join("")
+
+      const actTbody = document.getElementById("tbl_last5Actions")
+      actTbody.innerHTML = ORG.overview.last5Actions.map(r=>`
+        <tr>
+          <td>${escapeHTML(r.timestamp)}</td>
+          <td>${escapeHTML(r.user)}</td>
+          <td>${escapeHTML(r.action)}</td>
+        </tr>
+      `).join("")
+
+      drawOverviewCharts()
+      overviewRendered = true
+    }
+
+    function drawOverviewCharts(){
+      drawLineChart(document.getElementById("chart_overview_events"), ORG.overview.eventsTimeSeries, { stroke:"rgba(56,189,248,1)" })
+      drawLineChart(document.getElementById("chart_overview_risk"), ORG.overview.riskTrend, { stroke:"rgba(251,113,133,1)" })
+      drawBarChart(document.getElementById("chart_overview_category"), ORG.overview.categoryBar, { fill:"rgba(37,99,235,0.95)" })
+    }
+
+    let userRenderedOnce = false
+    function renderUserDetections(){
+      if (userRenderedOnce) return
+      userRenderedOnce = true
+
+      const sel = document.getElementById("userSelect")
+      const users = Object.keys(ORG.users || {})
+      sel.innerHTML = users.map(u=>`<option value="${escapeHTML(u)}">${escapeHTML(u)}</option>`).join("")
+      sel.addEventListener("change", ()=> renderUserMini(sel.value))
+
+      if (users.length) renderUserMini(users[0])
+      else renderUserMini("")
+    }
+
+    function renderUserMini(user){
+      const data = ORG.users?.[user]
+      const empty = document.getElementById("userEmpty")
+      const dash = document.getElementById("userMiniDash")
+
+      if (!data){
+        empty.classList.remove("hidden")
+        dash.classList.add("hidden")
+        return
+      }
+
+      empty.classList.add("hidden")
+      dash.classList.remove("hidden")
+
+      const s = data.stats
+      document.getElementById("u_kpi_detections").textContent = fmtNum(s.detections)
+      document.getElementById("u_kpi_highRisk").textContent = fmtNum(s.highRisk)
+      document.getElementById("u_kpi_blocked").textContent = fmtNum(s.blocked)
+      document.getElementById("u_kpi_redacted").textContent = fmtNum(s.redacted)
+      document.getElementById("u_kpi_topCategory").textContent = s.topCategory
+      document.getElementById("u_kpi_rate").textContent = `${Math.round((s.rate||0)*100)}%`
+
+      drawLineChart(document.getElementById("chart_user_timeseries"), data.timeSeries, { stroke:"rgba(56,189,248,1)" })
+      drawBarChart(document.getElementById("chart_user_categories"), data.categories, { fill:"rgba(37,99,235,0.95)" })
+      drawStackBar(document.getElementById("chart_user_actions"), data.actions, {
+        colors:["rgba(251,113,133,.9)","rgba(56,189,248,.9)","rgba(52,211,153,.9)"]
+      })
+
+      const tbody = document.getElementById("tbl_userEvents")
+      tbody.innerHTML = (data.events || []).map(e=>`
+        <tr>
+          <td>${escapeHTML(e.timestamp)}</td>
+          <td>${riskPillHTML(e.risk)}</td>
+          <td>${escapeHTML(e.category)}</td>
+          <td>${escapeHTML(e.finding)}</td>
+          <td>${escapeHTML(e.action)}</td>
+          <td>${escapeHTML(e.source)}</td>
+        </tr>
+      `).join("")
+    }
+
+    let churnRenderedOnce = false
+    function renderChurn(){
+      if (churnRenderedOnce) return
+      churnRenderedOnce = true
+
+      const cu = churnToBars(ORG.churn.users)
+      const cp = churnToBars(ORG.churn.policies)
+      const cg = churnToBars(ORG.churn.groups)
+
+      drawBarChart(document.getElementById("chart_churn_users"), cu, { fill:"rgba(56,189,248,0.92)" })
+      drawBarChart(document.getElementById("chart_churn_policies"), cp, { fill:"rgba(37,99,235,0.92)" })
+      drawBarChart(document.getElementById("chart_churn_groups"), cg, { fill:"rgba(14,165,233,0.92)" })
+
+      const tbody = document.getElementById("tbl_adminActions")
+      tbody.innerHTML = ORG.churn.recent.map(a=>`
+        <tr>
+          <td>${escapeHTML(a.timestamp)}</td>
+          <td>${escapeHTML(a.admin)}</td>
+          <td>${escapeHTML(a.action)}</td>
+        </tr>
+      `).join("")
+    }
+
+    function churnToBars(obj){
+      const rows = []
+      for (const [admin, c] of Object.entries(obj || {})){
+        const total = (c.create||0)+(c.update||0)+(c.delete||0)
+        rows.push({ k: admin.split("@")[0], v: total })
+      }
+      rows.sort((a,b)=>b.v-a.v)
+      return rows
+    }
+
+    let myRenderedOnce = false
+    function renderMyEvents(){
+      if (myRenderedOnce) return
+      myRenderedOnce = true
+
+      const tbody = document.getElementById("tbl_myEvents")
+      tbody.innerHTML = (ORG.myEvents || []).map(e=>`
+        <tr>
+          <td>${escapeHTML(e.timestamp)}</td>
+          <td>${riskPillHTML(e.risk)}</td>
+          <td>${escapeHTML(e.category)}</td>
+          <td>${escapeHTML(e.finding)}</td>
+          <td>${escapeHTML(e.action)}</td>
+          <td>${escapeHTML(e.source)}</td>
+        </tr>
+      `).join("")
+    }
+
+    /* ---------------- Init + responsive redraw ---------------- */
+
+    function redrawVisibleCharts(){
+      // Overview is visible by default
+      if (!document.getElementById("tab-overview").classList.contains("hidden")) drawOverviewCharts()
+
+      // User charts only if that tab is open and user already loaded
+      if (!document.getElementById("tab-userDetections").classList.contains("hidden") && userRenderedOnce){
+        const sel = document.getElementById("userSelect")
+        if (sel && sel.value) renderUserMini(sel.value)
+      }
+
+      // Churn charts only if churn tab is open
+      if (!document.getElementById("tab-churn").classList.contains("hidden") && churnRenderedOnce){
+        churnRenderedOnce = false
+        renderChurn()
+      }
+    }
+
+    // If anything breaks again, at least you'll see it.
+    window.addEventListener("error", (e)=> console.error("Runtime error:", e.message, e.error))
+
+    renderOverview()
+
+    // Charts sometimes need a tick after layout
+    setTimeout(redrawVisibleCharts, 0)
+    window.addEventListener("resize", ()=> setTimeout(redrawVisibleCharts, 80))
+  </script>
+</body>
+</html>

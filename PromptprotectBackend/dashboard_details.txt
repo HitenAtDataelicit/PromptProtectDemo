@@ -1,0 +1,169 @@
+1. Executive Security Posture
+Total events
+Scanned events
+Detected events
+Blocked events
+Redacted events
+Overall risk score
+Severity distribution
+Event trend (timechart)
+
+2. Sensitive Data & Exposure
+PII count
+PHI count
+PCI count
+Secrets count
+Crypto data count
+Custom entities count
+Category-wise breakdown
+Classification trend (timechart)
+
+3. Risk & Threat Intelligence
+Critical events
+High risk events
+Medium risk events
+Low risk events
+Risk score by category
+Severity trend (timechart)
+Daily detection trend
+Weekly risk trend
+Peak violation hours
+Anomaly spikes
+Emerging entity types
+
+4. User, Policy & Behavior Insights
+Top users by detections
+Users with critical violations
+User activity trend
+User-wise risk score
+Blocked actions by user
+
+5. Channels, AI Platforms & Controls
+ChatGPT
+Copilot
+Claude
+Gemini
+Perplexity
+Browser (Omnibox / Google.com)
+Source-wise detection count
+Source-wise risk level
+Blocked events
+Fully redacted events
+Partially redacted events
+Allowed events
+Action distribution
+Action trend (timechart)
+
+6. Incidents, Audit & Compliance
+Active alerts
+Critical incidents
+Incident timeline
+Resolution status
+SLA breach indicators
+Audit log events
+User action history
+Policy change history
+Compliance-ready reports
+Export (CSV / PDF)
+
+
+=================================
+FOR 1. Executive Security Posture
+
+CREATE TABLE promptprotect_audit.exec_security_posture_agg_v2
+(
+    org String,
+    event_date Date,
+    event_time DateTime,
+
+    total_events UInt64,
+    scanned_events UInt64,
+    detected_events UInt64,
+
+    blocked_events UInt64,
+    redacted_events UInt64,
+
+    critical_events UInt64,
+    high_events UInt64,
+    medium_events UInt64,
+    low_events UInt64,
+
+    avg_risk_score Float32,
+    detected_risk_score Float32
+)
+ENGINE = SummingMergeTree
+ORDER BY (org, event_date, event_time);
+
+
+============ mv_exec_security_posture_agg_v2
+
+
+CREATE MATERIALIZED VIEW promptprotect_audit.mv_exec_security_posture_agg_v2
+TO promptprotect_audit.exec_security_posture_agg_v2
+AS
+SELECT
+    org,
+    toDate(ts)          AS event_date,
+    toStartOfMinute(ts) AS event_time,
+
+    count()                                   AS total_events,
+    countIf(event = 'pii.scan')               AS scanned_events,
+    countIf(pii_detected = 1)                 AS detected_events,
+
+    countIf(action_taken = 'BLOCK')           AS blocked_events,
+    countIf(action_taken IN ('REDACT','PARTIAL_REDACT')) AS redacted_events,
+
+    countIf(pii_detected = 1 AND has(findings.group,'secrets')) AS critical_events,
+    countIf(pii_detected = 1 AND has(findings.group,'pci'))     AS high_events,
+    countIf(pii_detected = 1 AND has(findings.group,'phi'))     AS medium_events,
+    countIf(pii_detected = 1 AND has(findings.group,'pii'))     AS low_events,
+
+    avg(
+        multiIf(
+            has(findings.group,'secrets'), 0.95,
+            has(findings.group,'pci'),     0.85,
+            has(findings.group,'phi'),     0.70,
+            has(findings.group,'pii'),     0.50,
+            0.10
+        )
+    ) AS avg_risk_score,
+
+    avgIf(
+        multiIf(
+            has(findings.group,'secrets'), 0.95,
+            has(findings.group,'pci'),     0.85,
+            has(findings.group,'phi'),     0.70,
+            has(findings.group,'pii'),     0.50,
+            0.10
+        ),
+        pii_detected = 1
+    ) AS detected_risk_score
+
+FROM promptprotect_audit.pii_analytics_final
+GROUP BY
+    org, event_date, event_time;
+
+
+
+CREATE TABLE promptprotect_audit.exec_security_posture_kpi
+(
+    org String,
+    event_date Date,
+
+    total_events UInt64,
+    scanned_events UInt64,
+    detected_events UInt64,
+
+    blocked_events UInt64,
+    redacted_events UInt64,
+
+    critical_events UInt64,
+    high_events UInt64,
+    medium_events UInt64,
+    low_events UInt64,
+
+    overall_risk_score Float32,
+    detected_risk_score Float32
+)
+ENGINE = SummingMergeTree
+ORDER BY (org, event_date);

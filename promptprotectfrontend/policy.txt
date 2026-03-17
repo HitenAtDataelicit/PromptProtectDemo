@@ -1,0 +1,177 @@
+PromptProtect Privacy Policy
+
+Effective Date: [Insert Date]
+
+PromptProtect is an enterprise security platform consisting of a browser extension, web dashboard, and backend services designed to prevent sensitive organizational data from being exposed to external AI platforms.
+
+This Privacy Policy describes how PromptProtect collects, uses, processes, and shares information.
+
+1. Scope
+
+PromptProtect is provided to organizations for enterprise data protection. End users access PromptProtect through their employer or organization.
+
+2. Information We Collect
+A. Account & Authentication Information
+
+When organizations or users access PromptProtect, we may collect:
+
+Name
+
+Work email address
+
+Organization identifier
+
+Role and group assignments
+
+Authentication tokens
+
+SSO-related identifiers (LDAP / SAML)
+
+Authentication is managed either through PromptProtect credentials or the organization’s identity provider.
+
+B. User-Submitted Content (Prompts)
+
+When a user submits text to supported AI platforms (e.g., ChatGPT, Claude, Gemini), the PromptProtect extension may:
+
+Analyze the prompt locally
+
+Transmit the prompt securely to the PromptProtect backend
+
+Process the prompt through our redaction and detection systems
+
+Apply redaction or blocking rules based on organizational policy
+
+Prompts may be securely stored within the organization’s administrative dashboard for monitoring and compliance purposes.
+
+C. Policy & Security Metadata
+
+We may collect:
+
+Policy evaluation results
+
+Redaction decisions
+
+Security event logs
+
+Timestamp and domain (limited to supported AI platforms)
+
+D. Local Browser Storage
+
+The extension uses browser storage to store:
+
+Session state
+
+Authentication tokens
+
+Configuration settings
+
+This data remains within the user’s browser and is used strictly for functionality.
+
+3. What We Do NOT Collect
+
+PromptProtect does not:
+
+Collect general browsing history
+
+Track activity outside supported AI domains
+
+Sell personal data
+
+Use data for advertising
+
+Inject affiliate links
+
+Perform cryptocurrency mining
+
+Monitoring is limited strictly to supported AI platforms for enterprise security enforcement.
+
+4. How We Use Information
+
+We use collected data to:
+
+Authenticate users
+
+Enforce organizational AI usage policies
+
+Detect and redact sensitive information
+
+Provide administrative monitoring dashboards
+
+Improve detection accuracy
+
+Maintain platform security
+
+5. Data Sharing
+
+User data may be shared only:
+
+With the organization that deployed PromptProtect
+
+With secure infrastructure providers necessary to operate the service
+
+To comply with applicable law
+
+To protect against fraud, abuse, or security threats
+
+We do not sell or share user data for marketing or advertising purposes.
+
+6. Human Access to Data
+
+Authorized administrators within the deploying organization may review stored prompt activity through the enterprise dashboard.
+
+PromptProtect personnel do not access user content except:
+
+When required for security investigation
+
+When required by law
+
+With explicit organizational authorization for support purposes
+
+7. Data Security
+
+All communications between:
+
+Extension and backend
+
+Frontend and backend
+
+are encrypted using HTTPS/TLS.
+
+We implement appropriate technical and organizational safeguards to protect data.
+
+8. Data Retention
+
+Prompt data and logs are retained according to the organization’s configured retention policy.
+
+Organizations may request deletion of stored data.
+
+9. Limited Use Compliance
+
+PromptProtect’s use of data complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.
+
+Data collected via the extension is used solely for providing and improving enterprise AI data protection functionality.
+
+10. Third-Party Services
+
+PromptProtect may integrate with:
+
+LDAP providers
+
+SAML identity providers
+
+Cloud infrastructure providers
+
+These services process data according to their own privacy policies.
+
+11. Changes to This Policy
+
+We may update this Privacy Policy periodically. Updates will be posted at this URL with a revised effective date.
+
+12. Contact
+
+For privacy inquiries:
+
+[Your Company Name]
+[Your Company Email]
+[Company Address, optional]
+ 
