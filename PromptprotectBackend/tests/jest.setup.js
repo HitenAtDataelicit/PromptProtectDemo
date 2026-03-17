@@ -3,7 +3,11 @@ const { connect, closeDatabase } = require("./db.helpers");
 
 mongoose.set('bufferCommands', false);
 process.env.NODE_ENV = 'test';
-console.log("[Jest Setup] NODE_ENV set to test. Disabling buffering.");
+process.env.JWT_SECRET = process.env.JWT_SECRET || "test_jwt_secret_123";
+process.env.ORG_KEY_SECRET = process.env.ORG_KEY_SECRET || "test_org_key_secret";
+process.env.FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+console.log("[Jest Setup] NODE_ENV set to test. Defaults provided for secrets.");
 
 beforeAll(async () => {
     console.log("[Jest Setup] beforeAll Hook Start");
