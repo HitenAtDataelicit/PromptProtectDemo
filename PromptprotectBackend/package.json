@@ -32,7 +32,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --setupFilesAfterEnv ./tests/jest.setup.js --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --setupFilesAfterEnv ./tests/jest.setup.js --runInBand --forceExit"
   },
   "keywords": [],
   "author": "",

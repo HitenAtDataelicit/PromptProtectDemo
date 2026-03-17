@@ -14,7 +14,7 @@ const { sendAnalyticsEvent } = require("./analytics/sendAnalyticsEvent");
 const passport = require("passport");
 const { initSamlStrategy } = require("./config/saml.config");
 const ssoCtrl = require("./controllers/sso.controller");
-const cookieParser = require("cookie-parser");
+const mongoose = require("mongoose");
 const app = express();
 const fs = require("fs");
 const multer = require("multer");
@@ -31,7 +31,10 @@ const ruleConfigRoutes = require("./routes/ruleConfigurations.routes")
 const session = require("express-session")
 
 if (process.env.NODE_ENV !== 'test') {
+  console.log("[Server] Connecting to real DB...");
   connectDB();
+} else {
+  console.log("[Server] Running in TEST mode. Skipped auto-connectDB. ReadyState:", mongoose.connection.readyState);
 }
 
 app.use(cors({

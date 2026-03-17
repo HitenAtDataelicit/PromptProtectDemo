@@ -14,7 +14,10 @@ describe("Streamlined Functional Flow", () => {
         const request = require("supertest");
 
         // 1. Signup
-        console.log("STEP 1: Starting Signup...");
+        console.log("STEP 1: Starting Signup... ReadyState:", mongoose.connection.readyState);
+        if (mongoose.connection.readyState !== 1) {
+            console.warn("WARNING: Mongoose not connected before Signup!");
+        }
         const signupRes = await request(app)
             .post("/api/org/signup")
             .send({
@@ -58,7 +61,6 @@ describe("Streamlined Functional Flow", () => {
         authCookies = loginRes.headers['set-cookie'];
         expect(authCookies).toBeDefined();
         console.log("STEP 3: Login Successful. Cookies captured.");
-
         // 4. User Management: POST (Create User)
         console.log("STEP 4: Creating additional user...");
         const createUserRes = await request(app)
