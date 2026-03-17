@@ -22,7 +22,7 @@ const { extractTextFromFile } = require("./utils/fileParser");
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 } // 25 MB limit
+  limits: { fileSize: 25 * 1024 * 1024 }
 });
 
 const ruleCatalogRoutes = require("./routes/rules.catalog.routes")
@@ -30,7 +30,9 @@ const ruleConfigRoutes = require("./routes/ruleConfigurations.routes")
 
 const session = require("express-session")
 
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -650,4 +652,8 @@ function showPIIDecisionModal(result) {
 // require("./schedular/splunkCronSchedular");
 
 const PORT = process.env.PORT || 5005;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
