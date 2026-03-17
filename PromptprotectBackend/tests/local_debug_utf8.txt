@@ -1,0 +1,144 @@
+﻿  console.log
+    [Jest Setup] NODE_ENV set to test. Disabling buffering.
+
+      at Object.log (tests/jest.setup.js:6:9)
+
+  console.log
+    [Jest Setup] beforeAll Hook Start
+
+      at Object.log (tests/jest.setup.js:9:13)
+
+  console.log
+    [DB Helper] Starting connection sequence...
+
+      at log (tests/db.helpers.js:7:13)
+
+  console.log
+    [DB Helper] Creating MongoMemoryServer...
+
+      at log (tests/db.helpers.js:15:13)
+
+  console.log
+    [DB Helper] Memory DB URI obtained: mongodb://127.0.0.1:64573/
+
+      at log (tests/db.helpers.js:18:13)
+
+  console.log
+    [DB Helper] Memory DB Connected successfully.
+
+      at log (tests/db.helpers.js:38:13)
+
+  console.log
+    [Jest Setup] beforeAll Hook End
+
+      at Object.log (tests/jest.setup.js:11:13)
+
+  console.log
+    [dotenv@17.2.3] injecting env (15) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:142:11)
+
+  console.log
+    [Server] Running in TEST mode. Skipped auto-connectDB. ReadyState: 1
+
+      at Object.log (server.js:38:11)
+
+  console.log
+    [dotenv@17.2.3] injecting env (0) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (node_modules/dotenv/lib/main.js:142:11)
+
+node.exe : FAIL tests/f
+unctional.test.js
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (FAIL tests/fu   
+ nctional.test.js:S    
+tring) [], RemoteE    
+xception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  Streamlined 
+Functional Flow
+    ├ù Full Flow: 
+Signup -> Verify -> 
+Login -> Functional 
+Tests (1860 ms)
+
+  ΓùÅ Streamlined 
+Functional Flow ΓÇ║ 
+Full Flow: Signup -> 
+Verify -> Login -> 
+Functional Tests
+
+    ReferenceError: 
+mongoose is not defined
+
+    [0m [90m 15 
+|[39m
+     [90m 16 |[39m   
+      [90m// 1. 
+Signup[39m
+    [31m[1m>[22m[39
+m[90m 17 |[39m       
+  console[33m.[39mlog
+([32m"STEP 1: 
+Starting Signup... Read
+yState:"[39m[33m,[39
+m mongoose[33m.[39mco
+nnection[33m.[39mread
+yState)[33m;[39m
+     [90m    |[39m   
+                       
+                       
+              
+[31m[1m^[22m[39m
+     [90m 18 |[39m   
+      [36mif[39m (mon
+goose[33m.[39mconnect
+ion[33m.[39mreadyStat
+e [33m!==[39m 
+[35m1[39m) {
+     [90m 19 |[39m   
+          console[33m.
+[39mwarn([32m"WARNING
+: Mongoose not 
+connected before Signup
+!"[39m)[33m;[39m
+     [90m 20 |[39m   
+      }[0m
+
+      at 
+Object.mongoose (tests/
+functional.test.js:17:6
+3)
+
+Test Suites: 1 failed, 
+1 total
+Tests:       1 failed, 
+1 total
+Snapshots:   0 total
+Time:        3.662 s
+Ran all test suites 
+matching tests/function
+al.test.js.
+Force exiting Jest: 
+Have you considered 
+using 
+`--detectOpenHandles` 
+to detect async 
+operations that kept 
+running after all 
+tests finished?

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { clearDatabase } = require("./db.helpers");
 
 describe("Streamlined Functional Flow", () => {

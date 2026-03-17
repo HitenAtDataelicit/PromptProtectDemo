@@ -14,6 +14,7 @@ const { sendAnalyticsEvent } = require("./analytics/sendAnalyticsEvent");
 const passport = require("passport");
 const { initSamlStrategy } = require("./config/saml.config");
 const ssoCtrl = require("./controllers/sso.controller");
+const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const app = express();
 const fs = require("fs");
