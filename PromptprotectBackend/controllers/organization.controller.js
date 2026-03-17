@@ -144,7 +144,8 @@ exports.signup = async (req, res) => {
 
   } catch (err) {
     // Detailed error logging to understand why the catch block failed
-    console.error("Signup Error:", err);
+    console.error("Signup Error Stack:", err.stack || err);
+    console.error("Signup Error Message:", err.message || err);
 
     // Handle MongoDB duplicate key errors (11000)
     if (err.code === 11000 || (err.message && err.message.includes("E11000"))) {

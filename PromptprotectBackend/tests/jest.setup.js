@@ -23,4 +23,8 @@ jest.mock("../analytics/sendAnalyticsEvent", () => ({
     sendAnalyticsEvent: jest.fn().mockResolvedValue({ success: true })
 }));
 
+jest.mock("../services/email.service", () => ({
+    send_email: jest.fn().mockResolvedValue(true)
+}));
+
 jest.setTimeout(60000);
